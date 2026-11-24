@@ -169,8 +169,8 @@ const CFG = {
   // per-weapon damage multipliers and early-level boosts
   wmul:  { aura: .56, bombs: .8, vortex: .85, scythe: .85, mines: .9, slimetrail: .93,
            chain: 5.5, sentinel: 3, ricochet: 5, laser: 4.4, whirlwind: 4.2, shards: 3.9, needles: 3, bolt: 1.5, mace: 2.3,
-           gatling: 1.2, mortar: 3.0, charm: 2.0, crossbow: 5.0, tidalwave: 2.2, comet: 3.5 },
-  early: { aura: -.25, mace: -.6, seekers: 4.2, bolt: 5, bombs: 2.2, daggers: 2, gatling: 1.5 }
+           gatling: 0.85, axe: 1.3, mortar: 3.0, charm: 2.0, crossbow: 5.0, tidalwave: 2.2, comet: 3.5 },
+  early: { aura: -.25, mace: -.6, seekers: 4.2, bolt: 5, bombs: 2.2, daggers: 2, gatling: 1.0, axe: 0.3 }
 };
 const wm = (k, lv) => (CFG.wmul[k] ?? 1) * (1 + (CFG.early[k] ?? 0) * ((7 - lv) / 6) ** 2);
 const slv = () => pl ? pl.level : 1;
@@ -183,8 +183,8 @@ const ALL_SHAPES = [
   0, 3, 4, 5, 6, 7, 8, 'star', 'cross', 'trapezoid', 'house', 'arrow', 'ghost',
   'diamond', 'crescent', 'heart', 'shield', 'drop', 'hourglass', 'clover', 'gear', 'capsule',
   'infinity', 'spade', 'club', 'flower', 'star4', 'star6', 'astroid', 'ring',
-  'star8', 'decagon', 'kite', 'half_moon', 'skull', 'crown', 'gem', 'flame', 'lightning', 'spiral',
-  'snowman', 'scallop', 'pine_tree', 'candy', 'pinwheel', 'anchor', 'fish', 'sword', 'egg', 'butterfly'
+  'star8', 'decagon', 'kite', 'half_moon', 'skull', 'crown', 'gem', 'starfighter', 'jet', 'spiral',
+  'snowman', 'scallop', 'drone', 'candy', 'cog', 'rocket', 'fish', 'sword', 'egg', 'spine'
 ];
 
 /* ============ ENEMIES ============ */
@@ -408,7 +408,7 @@ const WEAPONS = {
       if ((w.t -= dt) > 0) return;
       w.t = Math.max(.7, 1.6 - .15 * w.lv) * P.cd;
       const n = 1 + (w.lv >= 3) + (w.lv >= 5);
-      for (let i = 0; i < n; i++) shoot(-Math.PI / 2 + rnd(-.45, .45), 400, 11, 14 + 5 * w.lv, 99, 1.8, '--shot2', { grav: 750, sides: 'pine_tree', spin: 12 });
+      for (let i = 0; i < n; i++) shoot(-Math.PI / 2 + rnd(-.45, .45), 400, 11, wm('axe', w.lv) * (14 + 5 * w.lv), 99, 1.8, '--shot2', { grav: 750, sides: 'trapezoid', spin: 12 });
     } },
   daggers: { name: 'Daggers', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 18L18 6"/><path d="M14 6l4 0l0 4"/><path d="M6 14l0 4l4 0"/></svg>', desc: 'Throws high-speed daggers forward and behind.',
     tick(w, dt) {
@@ -594,27 +594,30 @@ function readColors() {
 }
 
 function applyPalette() {
-  // Player and Player Projectiles at exact 0 deg (blue baseline)
-  C['--player'] = `hsl(0, 80%, 55%)`;
-  C['--gem']    = `hsl(0, 85%, 65%)`;
+  // New random base hue every game: the player sits on it, every other hue keeps its listed offset from it
+  const base = Math.floor(Math.random() * 360);
+  const hs = (off, s, l) => `hsl(${(base + off) % 360}, ${s}%, ${l}%)`;
+  // Player and Player Projectiles at offset 0
+  C['--player'] = hs(0, 80, 55);
+  C['--gem']    = hs(0, 85, 65);
 
-  C['--shot']   = `hsl(0, 80%, 55%)`;
-  C['--shot2']  = `hsl(0, 90%, 70%)`;
-  C['--shot3']  = `hsl(0, 70%, 40%)`;
+  C['--shot']   = hs(0, 80, 55);
+  C['--shot2']  = hs(0, 90, 70);
+  C['--shot3']  = hs(0, 70, 40);
 
   // Enemies at 180 ± 5 degrees (175 to 185)
-  C['--e1']     = `hsl(175, 75%, 55%)`;
-  C['--e2']     = `hsl(177, 70%, 45%)`;
-  C['--e3']     = `hsl(180, 80%, 65%)`;
-  C['--e4']     = `hsl(183, 65%, 40%)`;
-  C['--e5']     = `hsl(185, 85%, 35%)`;
+  C['--e1']     = hs(175, 75, 55);
+  C['--e2']     = hs(177, 70, 45);
+  C['--e3']     = hs(180, 80, 65);
+  C['--e4']     = hs(183, 65, 40);
+  C['--e5']     = hs(185, 85, 35);
 
   // Enemy projectile at exact 160 deg
   // (We use CSS variable override when drawing enemy projectiles)
-  C['--eshot']  = `hsl(160, 90%, 50%)`;
+  C['--eshot']  = hs(160, 90, 50);
 
   // Final boss at exact 200 deg
-  C['--boss']   = `hsl(200, 90%, 50%)`;
+  C['--boss']   = hs(200, 90, 50);
 }
 
 /* ============ STATE ============ */
@@ -1169,6 +1172,55 @@ function update(dt) {
 }
 
 /* ============ DRAW ============ */
+/* Traces one closed polygon from points given in units of r, rotated by a. Subpaths in one path should share winding so they union. */
+function tracePts(c, x, y, r, a, pts) {
+  const cs = Math.cos(a), sn = Math.sin(a);
+  for (let i = 0; i < pts.length; i++) {
+    const px = pts[i][0] * r, py = pts[i][1] * r;
+    const rx = x + px * cs - py * sn, ry = y + px * sn + py * cs;
+    i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
+  }
+  c.closePath();
+}
+/* Composite shape toolkit. Everything is built in units of r, heading along +x, and forced to one winding so subpaths union. */
+const orient = pts => { let s = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += p[0] * q[1] - q[0] * p[1]; } return s < 0 ? pts.slice().reverse() : pts; };
+const xf = (pts, ang = 0, tx = 0, ty = 0) => { const cs = Math.cos(ang), sn = Math.sin(ang); return pts.map(([px, py]) => [tx + px * cs - py * sn, ty + px * sn + py * cs]); };
+const rect = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
+const ribbon = (x0, x1, cy, hw, N = 16) => { const top = [], bot = []; for (let i = 0; i <= N; i++) { const u = i / N, px = x0 + (x1 - x0) * u, mid = cy(u), h = hw(u); top.push([px, mid - h]); bot.push([px, mid + h]); } return orient(top.concat(bot.reverse())); };
+const seg = (ax, ay, bx, by, w) => { const dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy), nx = -dy / l * w / 2, ny = dx / l * w / 2; return orient([[ax + nx, ay + ny], [bx + nx, by + ny], [bx - nx, by - ny], [ax - nx, ay - ny]]); };
+const polar = (f, N = 72) => orient(Array.from({ length: N }, (_, i) => { const a = i * TAU / N; const d = f(a); return [d * Math.cos(a), d * Math.sin(a)]; }));
+const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
+// parts = polygons, discs/holes = [x, y, radius]
+const MULTI = {
+  // |-|-|-| : four posts joined by one crossbar
+  spine: { parts: [-0.84, -0.28, 0.28, 0.84].map(cx => rect(cx - 0.085, -0.52, cx + 0.085, 0.52)).concat([rect(-0.84, -0.085, 0.84, 0.085)]) },
+  // Cog: 10 trapezoid teeth round a body with an axle hole (named cog because 'gear' already exists in the pool)
+  cog: { parts: [orient(Array.from({ length: 10 }, (_, i) => [[-11, 0.72], [-6, 1], [6, 1], [11, 0.72]].map(([d, rr]) => { const a = (i * 36 + d) * Math.PI / 180; return [rr * Math.cos(a), rr * Math.sin(a)]; })).flat())], holes: [[0, 0, 0.3]] },
+  // Swept-fin cell (solid)
+  starfighter: { parts: [polar(a => 0.5 + 0.7 * Math.pow(Math.max(0, Math.cos(a)), 3) + 0.55 * Math.exp(-(((Math.abs(wrapA(a)) - 2.3) / 0.32) ** 2)), 90)] },
+  // Jet: pointed fuselage plus two swept parallelogram wings
+  jet: { parts: [
+    orient([[1.25, 0], [0.95, -0.12], [-0.9, -0.12], [-0.9, 0.12], [0.95, 0.12]]),
+    orient([[0.4, -0.1], [-0.25, -0.95], [-0.6, -0.95], [-0.2, -0.1]]),
+    orient([[0.4, 0.1], [-0.25, 0.95], [-0.6, 0.95], [-0.2, 0.1]])
+  ] },
+  // Drone: honeycomb of 7 equal circles, one centre and six around it (nearly touching)
+  drone: { parts: [], discs: [[0, 0, 0.33], ...Array.from({ length: 6 }, (_, k) => [0.67 * Math.cos(k * Math.PI / 3), 0.67 * Math.sin(k * Math.PI / 3), 0.33])] },
+  // Rocket: rectangular body, triangular nose, two triangular fins
+  rocket: { parts: [
+    rect(-0.7, -0.3, 0.6, 0.3),
+    orient([[0.6, -0.3], [1.2, 0], [0.6, 0.3]]),
+    orient([[-0.1, -0.3], [-0.75, -0.8], [-0.75, -0.3]]),
+    orient([[-0.1, 0.3], [-0.75, 0.8], [-0.75, 0.3]])
+  ] },
+  // Sword: long blade (x -0.6..1.2) with a pointed tip, short hilt (x -1.24..-0.6) of crossguard, grip and round pommel
+  sword: { parts: [
+    orient([[1.2, 0], [1.0, -0.14], [-0.6, -0.14], [-0.6, 0.14], [1.0, 0.14]]),
+    rect(-0.75, -0.45, -0.6, 0.45),
+    rect(-1.12, -0.07, -0.75, 0.07)
+  ], discs: [[-1.12, 0, 0.12]] }
+};
+
 function polyPath(x, y, r, n, rot, c = ctx) {
   c.beginPath();
   if (!n || n === 'circle') {
@@ -1261,10 +1313,16 @@ function polyPath(x, y, r, n, rot, c = ctx) {
       i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
     });
     c.closePath();
-  } else if (n === 'crescent' || n === 'half_moon') {
+  } else if (n === 'half_moon') {
+    // True half disc: a semicircular arc closed by its straight diameter, pivoting on its centroid
+    const off = 4 * r / (3 * Math.PI);
+    const hx = x - Math.cos(rot) * off, hy = y - Math.sin(rot) * off;
+    c.arc(hx, hy, r, rot - Math.PI / 2, rot + Math.PI / 2, false);
+    c.closePath();
+  } else if (n === 'crescent') {
     const cos = Math.cos(rot), sin = Math.sin(rot);
     const tr = (px, py) => [x + px * cos - py * sin, y + px * sin + py * cos];
-    const thickness = n === 'half_moon' ? 0.85 : 0.45;
+    const thickness = 0.45;
     const [p0x, p0y] = tr(0, -r * 1.1);
     const [c1x, c1y] = tr(r * 1.3, 0);
     const [p1x, p1y] = tr(0, r * 1.1);
@@ -1381,13 +1439,12 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     c.bezierCurveTo(c3x, c3y, c4x, c4y, tX, tY);
     c.closePath();
   } else if (n === 'club') {
-    const cos = Math.cos(rot), sin = Math.sin(rot);
-    for (let i = 0; i <= 48; i++) {
-      const a = (i / 48) * TAU;
-      const cr = r * (0.5 + 0.35 * Math.cos(3 * a));
-      const px = cr * Math.cos(a), py = cr * Math.sin(a);
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
+    // Three thick, mutually intersecting circles
+    const cr = r * 0.52, d = r * 0.5;
+    for (let i = 0; i < 3; i++) {
+      const a = rot + i * TAU / 3, cx = x + Math.cos(a) * d, cy = y + Math.sin(a) * d;
+      c.moveTo(cx + cr, cy);
+      c.arc(cx, cy, cr, 0, TAU, false);
     }
     c.closePath();
   } else if (n === 'flower') {
@@ -1464,27 +1521,18 @@ function polyPath(x, y, r, n, rot, c = ctx) {
       i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
     });
     c.closePath();
-  } else if (n === 'flame') {
-    // Rotated -90 deg CCW
-    const rotCCW = rot - Math.PI / 2;
-    const cos = Math.cos(rotCCW), sin = Math.sin(rotCCW);
-    const tr = (px, py) => [x + px * cos - py * sin, y + px * sin + py * cos];
-    const [tX, tY] = tr(0, -r * 1.2);
-    const [bX, bY] = tr(0, r * 0.9);
-    c.moveTo(tX, tY);
-    c.quadraticCurveTo(...tr(r * 1.2, -r * 0.2), ...tr(r * 0.5, r * 0.9));
-    c.lineTo(bX, bY);
-    c.quadraticCurveTo(...tr(-r * 1.2, -r * 0.2), tX, tY);
-    c.closePath();
-  } else if (n === 'lightning') {
-    // Redrawn sharp bolt
-    const pts = [[0, -r * 1.25], [r * 0.65, -r * 0.15], [r * 0.15, 0], [r * 0.7, r * 1.25], [-r * 0.45, r * 0.15], [-r * 0.1, 0]];
-    const cos = Math.cos(rot), sin = Math.sin(rot);
-    pts.forEach(([px, py], i) => {
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
-    });
-    c.closePath();
+  } else if (MULTI[n]) {
+    // Composite shapes: several same-winding subpaths, plus optional round discs and holes
+    const m = MULTI[n], cs = Math.cos(rot), sn = Math.sin(rot);
+    for (const pts of m.parts) tracePts(c, x, y, r, rot, pts);
+    for (const [px, py, pr] of m.discs || []) {
+      const dx = x + (px * cs - py * sn) * r, dy = y + (px * sn + py * cs) * r;
+      c.moveTo(dx + pr * r, dy); c.arc(dx, dy, pr * r, 0, TAU, false);
+    }
+    for (const [px, py, pr] of m.holes || []) {
+      const dx = x + (px * cs - py * sn) * r, dy = y + (px * sn + py * cs) * r;
+      c.moveTo(dx + pr * r, dy); c.arc(dx, dy, pr * r, 0, TAU, true);
+    }
   } else if (n === 'spiral') {
     const cos = Math.cos(rot), sin = Math.sin(rot);
     for (let i = 0; i <= 36; i++) {
@@ -1494,57 +1542,31 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     }
     c.closePath();
   } else if (n === 'snowman') {
-    // 3 intersecting circles of equal size oriented dynamically to rot
-    const cr = r * 0.42;
+    // Two intersecting circles: large body behind, smaller head ahead
     const cos = Math.cos(rot), sin = Math.sin(rot);
-    for (const offset of [-cr * 1.1, 0, cr * 1.1]) {
-      const cx = x + offset * cos, cy = y + offset * sin;
+    for (const [off, cr] of [[-r * 0.29, r * 0.66], [r * 0.53, r * 0.42]]) {
+      const cx = x + off * cos, cy = y + off * sin;
       c.moveTo(cx + cr, cy);
       c.arc(cx, cy, cr, 0, TAU, false);
     }
     c.closePath();
   } else if (n === 'scallop') {
-    // Redrawn seashell fan contour
-    const cos = Math.cos(rot), sin = Math.sin(rot);
-    for (let i = 0; i <= 36; i++) {
-      const a = (i / 36) * TAU, sr = r * (0.75 + 0.25 * Math.sin(8 * a)), px = sr * Math.cos(a), py = sr * Math.sin(a);
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
+    // Scallop shell: bilaterally symmetric ribbed fan with a flat hinge and two ears (hinge at the back, fan opens forward)
+    const a = rot + Math.PI / 2, cs = Math.cos(a), sn = Math.sin(a);
+    const tr = (px, py) => [x + (px * cs - py * sn) * r, y + (px * sn + py * cs) * r];
+    const ribs = 7, steps = ribs * 6, half = 1.05;
+    for (let i = 0; i <= steps; i++) {
+      const u = i / steps, th = -half + 2 * half * u;
+      const R = 1.76 * Math.cos(th) * (0.86 + 0.14 * Math.abs(Math.sin(Math.PI * ribs * u)));
+      const [px, py] = tr(R * Math.sin(th), 0.9 - R * Math.cos(th));
+      i ? c.lineTo(px, py) : c.moveTo(px, py);
     }
-    c.closePath();
-  } else if (n === 'pine_tree') {
-    // Rotated +90 deg CW
-    const rotCW = rot + Math.PI / 2;
-    const pts = [[0, -r * 1.1], [r * 0.4, -r * 0.3], [r * 0.25, -r * 0.3], [r * 0.65, r * 0.3], [r * 0.35, r * 0.3], [r * 0.8, r * 0.9], [-r * 0.8, r * 0.9], [-r * 0.35, r * 0.3], [-r * 0.65, r * 0.3], [-r * 0.25, -r * 0.3], [-r * 0.4, -r * 0.3]];
-    const cos = Math.cos(rotCW), sin = Math.sin(rotCW);
-    pts.forEach(([px, py], i) => {
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
-    });
+    c.lineTo(...tr(0.74, 0.87));
+    c.lineTo(...tr(-0.74, 0.87));
     c.closePath();
   } else if (n === 'candy') {
     const pts = [[-r * 0.6, -r], [r * 0.6, -r], [r * 0.2, -r * 0.5], [r * 0.6, 0], [r * 0.2, r * 0.5], [r * 0.6, r], [-r * 0.6, r], [-r * 0.2, r * 0.5], [-r * 0.6, 0], [-r * 0.2, -r * 0.5]];
     const cos = Math.cos(rot), sin = Math.sin(rot);
-    pts.forEach(([px, py], i) => {
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
-    });
-    c.closePath();
-  } else if (n === 'pinwheel') {
-    for (let i = 0; i < 4; i++) {
-      const a = rot + i * Math.PI / 2;
-      const px1 = x + Math.cos(a) * r, py1 = y + Math.sin(a) * r;
-      const px2 = x + Math.cos(a + 0.5) * (r * 0.4), py2 = y + Math.sin(a + 0.5) * (r * 0.4);
-      i ? c.lineTo(px1, py1) : c.moveTo(px1, py1);
-      c.lineTo(px2, py2);
-      c.lineTo(x, y);
-    }
-    c.closePath();
-  } else if (n === 'anchor') {
-    // Rotated +90 deg CW
-    const rotCW = rot + Math.PI / 2;
-    const pts = [[0, -r], [r * 0.4, -r * 0.6], [r * 0.2, -r * 0.6], [r * 0.2, r * 0.4], [r * 0.8, r * 0.2], [r * 0.9, r * 0.7], [0, r], [-r * 0.9, r * 0.7], [-r * 0.8, r * 0.2], [-r * 0.2, r * 0.4], [-r * 0.2, -r * 0.6], [-r * 0.4, -r * 0.6]];
-    const cos = Math.cos(rotCW), sin = Math.sin(rotCW);
     pts.forEach(([px, py], i) => {
       const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
       i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
@@ -1559,28 +1581,12 @@ function polyPath(x, y, r, n, rot, c = ctx) {
       i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
     });
     c.closePath();
-  } else if (n === 'sword') {
-    const pts = [[r * 1.2, 0], [r * 0.2, -r * 0.25], [r * 0.2, -r * 0.5], [0, -r * 0.5], [0, -r * 0.15], [-r * 0.6, -r * 0.15], [-r * 0.6, r * 0.15], [0, r * 0.15], [0, r * 0.5], [r * 0.2, r * 0.5], [r * 0.2, r * 0.25]];
-    const cos = Math.cos(rot), sin = Math.sin(rot);
-    pts.forEach(([px, py], i) => {
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
-    });
-    c.closePath();
   } else if (n === 'egg') {
     // Rotated -90 deg CCW
     const rotCCW = rot - Math.PI / 2;
     const cos = Math.cos(rotCCW), sin = Math.sin(rotCCW);
     for (let i = 0; i <= 36; i++) {
       const a = (i / 36) * TAU, px = r * 0.75 * Math.cos(a), py = r * (0.95 + 0.25 * Math.sin(a)) * Math.sin(a);
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
-    }
-    c.closePath();
-  } else if (n === 'butterfly') {
-    const cos = Math.cos(rot), sin = Math.sin(rot);
-    for (let i = 0; i <= 48; i++) {
-      const a = (i / 48) * TAU, br = r * (0.4 + 0.6 * Math.abs(Math.sin(2 * a) * Math.cos(a))), px = br * Math.cos(a), py = br * Math.sin(a);
       const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
       i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
     }
