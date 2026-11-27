@@ -375,19 +375,12 @@ const WEAPONS = {
         });
       }
     } },
-  tidalwave: { name: 'Tidal Wave', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12c4-4 8 4 12 0s8 4 12 0"/></svg>', desc: 'Launches a sweeping crescent wave forward, pushing back enemies.',
-    tick(w, dt) {
-      if ((w.t -= dt) > 0) return;
-      w.t = Math.max(.7, 1.8 - .15 * w.lv) * P.cd;
-      const tg = nearest(), a = tg ? Math.atan2(tg.y - pl.y, tg.x - pl.x) : pl.face;
-      shoot(a, 320, 14 + 2 * w.lv, wm('tidalwave', w.lv) * (10 + 3 * w.lv), 99, 1.4, '--shot2', { sides: 'crescent', rot: a, pushback: 180, hitOnce: true });
-    } },
-  whirlwind: { name: 'Whirlwind', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M6 11h12M8 16h8M11 21h2"/></svg>', desc: 'Summons wandering tornadoes that push back foes.',
+  whirlwind: { name: 'Whirlwind', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M6 11h12M8 16h8M11 21h2"/></svg>', desc: 'Summons large wandering pinwheel tornadoes that push back foes.',
     tick(w, dt) {
       if ((w.t -= dt) > 0) return;
       w.t = Math.max(1.0, 2.5 - .2 * w.lv) * P.cd;
       const a = rnd(0, TAU);
-      shoot(a, 120, 28, wm('whirlwind', w.lv) * (18 + 5 * w.lv), 99, 2.5, '--shot2', { sides: 'spiral', spin: 6, wander: 3 });
+      shoot(a, 120, 56, wm('whirlwind', w.lv) * (18 + 5 * w.lv), 99, 2.5, '--shot2', { sides: 'pinwheel', spin: 8, wander: 3 });
     } },
   shards: { name: 'Shards', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3 7 7 3-7 3-3 7-3-7-7-3 7-3z"/></svg>', desc: 'Bursts of sharp astroid shards flying in all directions.',
     tick(w, dt) {
@@ -428,7 +421,7 @@ const WEAPONS = {
       w.t = Math.max(.8, 2.2 - .2 * w.lv) * P.cd;
       const tg = nearest(); if (!tg) return;
       const a = Math.atan2(tg.y - pl.y, tg.x - pl.x);
-      shoot(a, 350, 7, wm('ricochet', w.lv) * (12 + 4 * w.lv), 3 + (w.lv >> 1), 2.5, '--shot3', { bounce: true, sides: 'gear', spin: 10 });
+      shoot(a, 500, 10, wm('ricochet', w.lv) * (12 + 4 * w.lv), 3 + (w.lv >> 1), 2.5, '--shot3', { bounce: true, sides: 'gear', spin: 10 });
     } },
   bombs: { name: 'Bombs', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="13" r="7"/><path d="M16 8l3-3"/><path d="M19 3h2v2"/></svg>', desc: 'Drops bombs that detonate after a short fuse.',
     tick(w, dt) {
@@ -503,19 +496,12 @@ const WEAPONS = {
         shoot(a, 400, 12, 7.5 + 2.5 * w.lv, 9999, life, '--shot3', { boom: 1, arcDir, a, sides: 'scallop', spin: 15 });
       }
     } },
-  vortex: { name: 'Vortex', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 12c-3 0-5-2-5-5s2-5 5-5 5 2 5 5"/></svg>', desc: 'Creates a singularity pulling enemies inward.',
+  vortex: { name: 'Vortex', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 12c-3 0-5-2-5-5s2-5 5-5 5 2 5 5"/></svg>', desc: 'Creates a spinning decagon singularity pulling enemies inward.',
     tick(w, dt) {
       if ((w.t -= dt) > 0) return;
       w.t = Math.max(1.5, 3.5 - .3 * w.lv) * P.cd;
       const tg = nearest();
-      zones.push({ x: tg ? tg.x : pl.x, y: tg ? tg.y : pl.y, r: 80 + 15 * w.lv, life: 3.0, max: 3.0, tk: 0, dmg: wm('vortex', w.lv) * (4 + 1.5 * w.lv), pull: 120 });
-    } },
-  comet: { name: 'Comet', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l9 9"/><circle cx="16" cy="16" r="4" fill="currentColor"/><path d="M8 4l2 2M4 8l2 2"/></svg>', desc: 'Crushing meteor strikes in a hexagonal zone.',
-    tick(w, dt) {
-      if ((w.t -= dt) > 0) return;
-      w.t = Math.max(1.2, 3.0 - .25 * w.lv) * P.cd;
-      const target = nearest() || { x: pl.x + rnd(-100, 100), y: pl.y + rnd(-100, 100) };
-      blasts.push({ x: target.x, y: target.y, t: 0, fuse: .6, r: (60 + 10 * w.lv) * CFG.attack.size, dmg: 40 + 15 * w.lv, shape: 6 });
+      zones.push({ x: tg ? tg.x : pl.x, y: tg ? tg.y : pl.y, r: 80 + 15 * w.lv, life: 3.0, max: 3.0, tk: 0, dmg: wm('vortex', w.lv) * (4 + 1.5 * w.lv), pull: 120, sides: 'decagon', spin: 4 });
     } },
   sentinel: { name: 'Sentinel', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="7" y="10" width="10" height="10" rx="2"/><path d="M12 4v6M9 4h6"/></svg>', desc: 'Deploys a stationary sentry turret firing at foes.',
     tick(w, dt) {
@@ -530,7 +516,7 @@ const WEAPONS = {
       const tg = nearest(), a = (tg ? Math.atan2(tg.y - pl.y, tg.x - pl.x) : pl.face) + rnd(-.15, .15);
       shoot(a, 900, 4, wm('gatling', w.lv) * (5 + 1.5 * w.lv), 1, 1.0, '--shot', { sides: 'kite', rot: a });
     } },
-  mortor: { name: 'Mortar', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 21h8M12 17v4M5 7l7-4 7 4v6l-7 4-7-4V7z"/></svg>', desc: 'Lobs clusters of small bombs in a randomized area.',
+  mortor: { name: 'Mortar', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 21h8M12 17v4M5 7l7-4 7 4v6l-7 4-7-4V7z"/></svg>', desc: 'Lobs clusters of small bombs that explode and spew sharp shrapnel.',
     tick(w, dt) {
       if ((w.t -= dt) > 0) return;
       w.t = Math.max(1.3, 2.9 - .25 * w.lv) * P.cd;
@@ -541,17 +527,17 @@ const WEAPONS = {
       for (let i = 0; i < clusterCount; i++) {
         const tx = cx + rnd(-65, 65);
         const ty = cy + rnd(-65, 65);
-        blasts.push({ x: tx, y: ty, t: -i * 0.08, fuse: 0.8, r: (18 + 3 * w.lv) * CFG.attack.size, dmg: wm('mortar', w.lv) * (18 + 5 * w.lv), shape: 4 });
+        blasts.push({ x: tx, y: ty, t: -i * 0.08, fuse: 0.8, r: (18 + 3 * w.lv) * CFG.attack.size, dmg: wm('mortar', w.lv) * (18 + 5 * w.lv), shape: 4, shrapnel: 4 + Math.floor(w.lv * 0.5), shrapnelDmg: wm('mortar', w.lv) * (6 + 2 * w.lv) });
       }
     } },
-  charm: { name: 'Charm', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', desc: 'Shoots slow homing heart projectiles that temporarily turn enemies into allies.',
+  charm: { name: 'Charm', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>', desc: 'Fires homing heart projectiles that charm enemies. Duration scales with level; potent enough to affect minibosses at higher levels (Final Boss immune).',
     tick(w, dt) {
       if ((w.t -= dt) > 0) return;
       w.t = Math.max(1.2, 3.2 - .3 * w.lv) * P.cd;
       const n = 1 + (w.lv >= 4 ? 1 : 0);
       for (let i = 0; i < n; i++) {
         const a = rnd(0, TAU);
-        shoot(a, 160, 10, wm('charm', w.lv) * (12 + 4 * w.lv), 1, 3.5, '--gem', { charm: true, home: 3.5, sides: 'heart', spin: 1 });
+        shoot(a, 160, 10, wm('charm', w.lv) * (12 + 4 * w.lv), 1, 3.5, '--gem', { charm: true, charmLv: w.lv, home: 3.5, sides: 'heart', spin: 1 });
       }
     } },
   crossbow: { name: 'Crossbow', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12h16M14 6l6 6-6 6M4 6l6 6-6 6"/></svg>', desc: 'Fires heavy armor-penetrating bolts that punch through rows of enemies.',
@@ -560,6 +546,18 @@ const WEAPONS = {
       w.t = Math.max(.6, 1.5 - .14 * w.lv) * P.cd;
       const tg = nearest(), a = tg ? Math.atan2(tg.y - pl.y, tg.x - pl.x) : pl.face;
       shoot(a, 950, 7, wm('crossbow', w.lv) * (25 + 9 * w.lv), 3 + w.lv, 1.6, '--shot3', { sides: 'sword', rot: a });
+    } },
+  tidalwave: { name: 'Tidal Wave', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12c4-4 8 4 12 0s8 4 12 0"/></svg>', desc: 'Launches crescent waves in a scattered stream forward, knocking enemies back.',
+    tick(w, dt) {
+      if ((w.t -= dt) > 0) return;
+      w.t = Math.max(.7, 1.8 - .15 * w.lv) * P.cd;
+      const tg = nearest(), baseAngle = tg ? Math.atan2(tg.y - pl.y, tg.x - pl.x) : pl.face;
+      const n = 1 + Math.floor(w.lv * 0.75);
+      const spread = 0.45;
+      for (let i = 0; i < n; i++) {
+        const a = baseAngle + (n > 1 ? (i - (n - 1) / 2) * (spread / (n - 1)) + rnd(-0.08, 0.08) : rnd(-0.05, 0.05));
+        shoot(a, 320, 21 + 3 * w.lv, wm('tidalwave', w.lv) * (10 + 3 * w.lv), 99, 1.4, '--shot2', { sides: 'crescent', rot: a, pushback: 180, hitOnce: true });
+      }
     } },
   comet: { name: 'Comet', max: 7, sym: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4l9 9"/><circle cx="16" cy="16" r="4" fill="currentColor"/><path d="M8 4l2 2M4 8l2 2"/></svg>', desc: 'Strikes targeted area with a comet that radiates a damaging shockwave outward.',
     tick(w, dt) {
@@ -594,29 +592,19 @@ function readColors() {
 }
 
 function applyPalette() {
-  // New random base hue every game: the player sits on it, every other hue keeps its listed offset from it
   const base = Math.floor(Math.random() * 360);
   const hs = (off, s, l) => `hsl(${(base + off) % 360}, ${s}%, ${l}%)`;
-  // Player and Player Projectiles at offset 0
   C['--player'] = hs(0, 80, 55);
   C['--gem']    = hs(0, 85, 65);
-
   C['--shot']   = hs(0, 80, 55);
   C['--shot2']  = hs(0, 90, 70);
   C['--shot3']  = hs(0, 70, 40);
-
-  // Enemies at 180 ± 5 degrees (175 to 185)
   C['--e1']     = hs(175, 75, 55);
   C['--e2']     = hs(177, 70, 45);
   C['--e3']     = hs(180, 80, 65);
   C['--e4']     = hs(183, 65, 40);
   C['--e5']     = hs(185, 85, 35);
-
-  // Enemy projectile at exact 160 deg
-  // (We use CSS variable override when drawing enemy projectiles)
   C['--eshot']  = hs(160, 90, 50);
-
-  // Final boss at exact 200 deg
   C['--boss']   = hs(200, 90, 50);
 }
 
@@ -690,16 +678,13 @@ function chunkAt(i, j) {
       }
     }
   } else if (stg === 9) {
-    // Stage 9: Maze Grid Corridors
     for (let q = 0; q < 4; q++) {
       const gx = i * CHUNK + (q % 2) * 240 + 30, gy = j * CHUNK + Math.floor(q / 2) * 240 + 30;
       if (Math.hypot(gx, gy) > 300) placeRect(160, 24);
     }
   } else if (stg === 10) {
-    // Stage 10: Dense Pillars
     for (let q = 0; q < 8; q++) placeCirc(18 + r() * 12);
   } else if (stg === 11) {
-    // Stage 11: Scattered Boulders
     for (let q = 0; q < 5; q++) placeCirc(35 + r() * 45);
   } else {
     for (let q=0, n=(r()<.8?1+(r()<.5)+(r()<.25):0); q<n; q++) {
@@ -860,7 +845,7 @@ function showGallery() {
     const label = typeof s === 'number' ? (s === 0 ? 'Circle' : s + '-Gon') : s.replace('_', ' ');
     return `<div class="gallery-card"><canvas class="shape-preview" width="64" height="64" data-shape="${s}"></canvas><span>#${i+1} ${label}</span></div>`;
   }).join('');
-  show(`<div style="display:flex;justify-content:space-between;align-items:center;"><h2>Shape Pool (${ALL_SHAPES.length} Shapes)</h2><button class="go" data-act="menu" style="padding:6px 18px;font-size:0.95rem;">Back</button></div><div class="gallery-grid">${items}</div>`);
+  show(`<div style="display:flex;justify-space-between;align-items:center;"><h2>Shape Pool (${ALL_SHAPES.length} Shapes)</h2><button class="go" data-act="menu" style="padding:6px 18px;font-size:0.95rem;">Back</button></div><div class="gallery-grid">${items}</div>`);
 }
 
 function renderGalleryPreviews() {
@@ -930,8 +915,6 @@ function start() {
   enemies = []; projs = []; gems = []; parts = []; rings = []; orbs = []; blasts = []; zones = []; slashes = []; zaps = []; minesArr = [];
   
   const pShape = ALL_SHAPES[Math.floor(Math.random() * ALL_SHAPES.length)];
-  
-  // Randomize enemy shapes each run from the 50 available shapes
   const shuffledEnemyShapes = [...ALL_SHAPES].sort(() => Math.random() - 0.5);
   let shapeIdx = 0;
   for (const k in ENEMIES) {
@@ -980,14 +963,12 @@ function update(dt) {
 
   for (const e of enemies) {
     if (e.ally) {
-      // 10-second charm expiration timer
-      e.charmTimer = (e.charmTimer || 10) - dt;
+      e.charmTimer = (e.charmTimer !== undefined ? e.charmTimer : 6) - dt;
       if (e.charmTimer <= 0) {
         e.ally = false;
         burst(e.x, e.y, e.type.col, 6);
         continue;
       }
-      // Ally logic: chase and attack nearest non-ally enemy
       let tg = nearest(e.x, e.y);
       if (tg) {
         const a = Math.atan2(tg.y - e.y, tg.x - e.x);
@@ -1101,6 +1082,14 @@ function update(dt) {
     if (!b.done && b.t >= b.fuse) {
       b.done = 1; burst(b.x, b.y, '--shot3', 10);
       query(b.x, b.y, b.r, e => { if (!e.ally && Math.hypot(e.x - b.x, e.y - b.y) < b.r + e.r) hurt(e, b.dmg); });
+      
+      if (b.shrapnel) {
+        const shrapCount = b.shrapnel, offset = rnd(0, TAU);
+        for (let k = 0; k < shrapCount; k++) {
+          const sa = offset + k * TAU / shrapCount;
+          projs.push({ x: b.x, y: b.y, vx: Math.cos(sa) * 420, vy: Math.sin(sa) * 420, sp: 420, r: 4, dmg: b.shrapnelDmg || (b.dmg * 0.4), pierce: 1, life: 0.6, col: '--shot2', hit: [], age: 0, sides: 'astroid', rot: sa });
+        }
+      }
     }
     if (b.t >= b.fuse + .25) blasts.splice(i, 1);
   }
@@ -1128,9 +1117,26 @@ function update(dt) {
     if (!dead) query(p.x, p.y, p.r, e => {
       if (dead || e.ally || p.hit.includes(e) || Math.hypot(e.x - p.x, e.y - p.y) > e.r + p.r) return;
       if (p.charm) {
-        e.ally = true;
-        e.charmTimer = 10;
-        burst(e.x, e.y, '--gem', 12);
+        if (e.type && e.type.final) {
+          p.hit.push(e);
+          hurt(e, p.dmg);
+          dead = true;
+          return;
+        }
+        
+        let charmChance = 1.0;
+        if (e.type && e.type.boss) {
+          const lv = p.charmLv || 1;
+          charmChance = 0.10 * (lv - 1);
+        }
+
+        if (Math.random() < charmChance) {
+          e.ally = true;
+          e.charmTimer = 6.0 + (p.charmLv || 1) - 1;
+          burst(e.x, e.y, '--gem', 12);
+        } else {
+          burst(e.x, e.y, '--flash', 4);
+        }
         dead = true;
         return;
       }
@@ -1172,7 +1178,6 @@ function update(dt) {
 }
 
 /* ============ DRAW ============ */
-/* Traces one closed polygon from points given in units of r, rotated by a. Subpaths in one path should share winding so they union. */
 function tracePts(c, x, y, r, a, pts) {
   const cs = Math.cos(a), sn = Math.sin(a);
   for (let i = 0; i < pts.length; i++) {
@@ -1182,7 +1187,7 @@ function tracePts(c, x, y, r, a, pts) {
   }
   c.closePath();
 }
-/* Composite shape toolkit. Everything is built in units of r, heading along +x, and forced to one winding so subpaths union. */
+
 const orient = pts => { let s = 0; for (let i = 0; i < pts.length; i++) { const p = pts[i], q = pts[(i + 1) % pts.length]; s += p[0] * q[1] - q[0] * p[1]; } return s < 0 ? pts.slice().reverse() : pts; };
 const xf = (pts, ang = 0, tx = 0, ty = 0) => { const cs = Math.cos(ang), sn = Math.sin(ang); return pts.map(([px, py]) => [tx + px * cs - py * sn, ty + px * sn + py * cs]); };
 const rect = (x0, y0, x1, y1) => [[x0, y0], [x1, y0], [x1, y1], [x0, y1]];
@@ -1190,30 +1195,23 @@ const ribbon = (x0, x1, cy, hw, N = 16) => { const top = [], bot = []; for (let 
 const seg = (ax, ay, bx, by, w) => { const dx = bx - ax, dy = by - ay, l = Math.hypot(dx, dy), nx = -dy / l * w / 2, ny = dx / l * w / 2; return orient([[ax + nx, ay + ny], [bx + nx, by + ny], [bx - nx, by - ny], [ax - nx, ay - ny]]); };
 const polar = (f, N = 72) => orient(Array.from({ length: N }, (_, i) => { const a = i * TAU / N; const d = f(a); return [d * Math.cos(a), d * Math.sin(a)]; }));
 const wrapA = a => Math.atan2(Math.sin(a), Math.cos(a));
-// parts = polygons, discs/holes = [x, y, radius]
+
 const MULTI = {
-  // |-|-|-| : four posts joined by one crossbar
   spine: { parts: [-0.84, -0.28, 0.28, 0.84].map(cx => rect(cx - 0.085, -0.52, cx + 0.085, 0.52)).concat([rect(-0.84, -0.085, 0.84, 0.085)]) },
-  // Cog: 10 trapezoid teeth round a body with an axle hole (named cog because 'gear' already exists in the pool)
   cog: { parts: [orient(Array.from({ length: 10 }, (_, i) => [[-11, 0.72], [-6, 1], [6, 1], [11, 0.72]].map(([d, rr]) => { const a = (i * 36 + d) * Math.PI / 180; return [rr * Math.cos(a), rr * Math.sin(a)]; })).flat())], holes: [[0, 0, 0.3]] },
-  // Swept-fin cell (solid)
   starfighter: { parts: [polar(a => 0.5 + 0.7 * Math.pow(Math.max(0, Math.cos(a)), 3) + 0.55 * Math.exp(-(((Math.abs(wrapA(a)) - 2.3) / 0.32) ** 2)), 90)] },
-  // Jet: pointed fuselage plus two swept parallelogram wings
   jet: { parts: [
     orient([[1.25, 0], [0.95, -0.12], [-0.9, -0.12], [-0.9, 0.12], [0.95, 0.12]]),
     orient([[0.4, -0.1], [-0.25, -0.95], [-0.6, -0.95], [-0.2, -0.1]]),
     orient([[0.4, 0.1], [-0.25, 0.95], [-0.6, 0.95], [-0.2, 0.1]])
   ] },
-  // Drone: honeycomb of 7 equal circles, one centre and six around it (nearly touching)
   drone: { parts: [], discs: [[0, 0, 0.33], ...Array.from({ length: 6 }, (_, k) => [0.67 * Math.cos(k * Math.PI / 3), 0.67 * Math.sin(k * Math.PI / 3), 0.33])] },
-  // Rocket: rectangular body, triangular nose, two triangular fins
   rocket: { parts: [
     rect(-0.7, -0.3, 0.6, 0.3),
     orient([[0.6, -0.3], [1.2, 0], [0.6, 0.3]]),
     orient([[-0.1, -0.3], [-0.75, -0.8], [-0.75, -0.3]]),
     orient([[-0.1, 0.3], [-0.75, 0.8], [-0.75, 0.3]])
   ] },
-  // Sword: long blade (x -0.6..1.2) with a pointed tip, short hilt (x -1.24..-0.6) of crossguard, grip and round pommel
   sword: { parts: [
     orient([[1.2, 0], [1.0, -0.14], [-0.6, -0.14], [-0.6, 0.14], [1.0, 0.14]]),
     rect(-0.75, -0.45, -0.6, 0.45),
@@ -1314,7 +1312,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (n === 'half_moon') {
-    // True half disc: a semicircular arc closed by its straight diameter, pivoting on its centroid
     const off = 4 * r / (3 * Math.PI);
     const hx = x - Math.cos(rot) * off, hy = y - Math.sin(rot) * off;
     c.arc(hx, hy, r, rot - Math.PI / 2, rot + Math.PI / 2, false);
@@ -1439,7 +1436,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     c.bezierCurveTo(c3x, c3y, c4x, c4y, tX, tY);
     c.closePath();
   } else if (n === 'club') {
-    // Three thick, mutually intersecting circles
     const cr = r * 0.52, d = r * 0.5;
     for (let i = 0; i < 3; i++) {
       const a = rot + i * TAU / 3, cx = x + Math.cos(a) * d, cy = y + Math.sin(a) * d;
@@ -1464,26 +1460,27 @@ function polyPath(x, y, r, n, rot, c = ctx) {
       i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
     }
     c.closePath();
-  } else if (n === 'blade') {
-    const cos = Math.cos(rot), sin = Math.sin(rot);
-    const pts = [[r * 1.2, 0], [0, r * 0.6], [-r * 0.8, 0], [0, -r * 0.2]];
-    pts.forEach(([px, py], i) => {
-      const rx = x + px * cos - py * sin, ry = y + px * sin + py * cos;
-      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
-    });
-    c.closePath();
-  } else if (n === 'ring') {
-    c.arc(x, y, r, 0, TAU, false);
-    c.arc(x, y, r * 0.5, 0, TAU, true);
-    c.closePath();
   } else if (n === 'decagon') {
     for (let i = 0; i < 10; i++) {
       const a = rot + i * TAU / 10, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
       i ? c.lineTo(px, py) : c.moveTo(px, py);
     }
     c.closePath();
+  } else if (n === 'pinwheel') {
+    const blades = 4;
+    const cos = Math.cos(rot), sin = Math.sin(rot);
+    for (let i = 0; i < blades; i++) {
+      const a = i * (TAU / blades);
+      const b = a + TAU / (blades * 2);
+      const px1 = r * Math.cos(a), py1 = r * Math.sin(a);
+      const px2 = (r * 0.3) * Math.cos(b), py2 = (r * 0.3) * Math.sin(b);
+      const rx1 = x + px1 * cos - py1 * sin, ry1 = y + px1 * sin + py1 * cos;
+      const rx2 = x + px2 * cos - py2 * sin, ry2 = y + px2 * sin + py2 * cos;
+      i ? c.lineTo(rx1, ry1) : c.moveTo(rx1, ry1);
+      c.lineTo(rx2, ry2);
+    }
+    c.closePath();
   } else if (n === 'kite') {
-    // Exaggerated diamond/tail kite shape
     const pts = [[0, -r * 1.4], [r * 0.85, -r * 0.5], [0, r * 1.5], [-r * 0.85, -r * 0.5]];
     const cos = Math.cos(rot + Math.PI / 2), sin = Math.sin(rot + Math.PI / 2);
     pts.forEach(([px, py], i) => {
@@ -1492,7 +1489,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (n === 'skull') {
-    // Rotated +90 deg CW
     const rotCW = rot + Math.PI / 2;
     const cos = Math.cos(rotCW), sin = Math.sin(rotCW);
     const pts = [[0, -r * 0.9], [r * 0.8, -r * 0.4], [r * 0.6, r * 0.4], [r * 0.3, r * 0.9], [-r * 0.3, r * 0.9], [-r * 0.6, r * 0.4], [-r * 0.8, -r * 0.4]];
@@ -1502,7 +1498,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (n === 'crown') {
-    // Rotated +90 deg CW
     const rotCW = rot + Math.PI / 2;
     const pts = [[-r * 0.9, r * 0.7], [-r * 0.9, -r * 0.6], [-r * 0.45, 0], [0, -r * 0.9], [r * 0.45, 0], [r * 0.9, -r * 0.6], [r * 0.9, r * 0.7]];
     const cos = Math.cos(rotCW), sin = Math.sin(rotCW);
@@ -1512,7 +1507,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (n === 'gem') {
-    // Rotated +90 deg CW
     const rotCW = rot + Math.PI / 2;
     const pts = [[-r * 0.5, -r * 0.9], [r * 0.5, -r * 0.9], [r, -r * 0.2], [0, r * 1.1], [-r, -r * 0.2]];
     const cos = Math.cos(rotCW), sin = Math.sin(rotCW);
@@ -1522,7 +1516,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (MULTI[n]) {
-    // Composite shapes: several same-winding subpaths, plus optional round discs and holes
     const m = MULTI[n], cs = Math.cos(rot), sn = Math.sin(rot);
     for (const pts of m.parts) tracePts(c, x, y, r, rot, pts);
     for (const [px, py, pr] of m.discs || []) {
@@ -1542,7 +1535,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     }
     c.closePath();
   } else if (n === 'snowman') {
-    // Two intersecting circles: large body behind, smaller head ahead
     const cos = Math.cos(rot), sin = Math.sin(rot);
     for (const [off, cr] of [[-r * 0.29, r * 0.66], [r * 0.53, r * 0.42]]) {
       const cx = x + off * cos, cy = y + off * sin;
@@ -1551,7 +1543,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     }
     c.closePath();
   } else if (n === 'scallop') {
-    // Scallop shell: bilaterally symmetric ribbed fan with a flat hinge and two ears (hinge at the back, fan opens forward)
     const a = rot + Math.PI / 2, cs = Math.cos(a), sn = Math.sin(a);
     const tr = (px, py) => [x + (px * cs - py * sn) * r, y + (px * sn + py * cs) * r];
     const ribs = 7, steps = ribs * 6, half = 1.05;
@@ -1573,7 +1564,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (n === 'fish') {
-    // Redrawn fish with body, head and tail fins
     const pts = [[r * 1.1, 0], [r * 0.3, -r * 0.55], [-r * 0.4, -r * 0.3], [-r * 0.95, -r * 0.75], [-r * 0.7, 0], [-r * 0.95, r * 0.75], [-r * 0.4, r * 0.3], [r * 0.3, r * 0.55]];
     const cos = Math.cos(rot), sin = Math.sin(rot);
     pts.forEach(([px, py], i) => {
@@ -1582,7 +1572,6 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     });
     c.closePath();
   } else if (n === 'egg') {
-    // Rotated -90 deg CCW
     const rotCCW = rot - Math.PI / 2;
     const cos = Math.cos(rotCCW), sin = Math.sin(rotCCW);
     for (let i = 0; i <= 36; i++) {
@@ -1592,11 +1581,10 @@ function polyPath(x, y, r, n, rot, c = ctx) {
     }
     c.closePath();
   } else {
-    // Standard regular polygon fallback for any unhandled numeric shape
     const numSides = (typeof n === 'number' && n > 0) ? n : 5;
     for (let i = 0; i < numSides; i++) {
       const a = rot + i * TAU / numSides, px = x + Math.cos(a) * r, py = y + Math.sin(a) * r;
-      i ? c.lineTo(px, py) : c.moveTo(px, py);
+      i ? c.lineTo(rx, ry) : c.moveTo(rx, ry);
     }
     c.closePath();
   }
@@ -1615,7 +1603,6 @@ function draw() {
 
   ctx.save(); ctx.translate(-cx, -cy);
   
-  // Solid Terrain Layer (Obstacles)
   ctx.fillStyle = C['--obstacle'];
   for (let i = Math.floor(cx / CHUNK); i <= Math.floor((cx + W) / CHUNK); i++) {
     for (let j = Math.floor(cy / CHUNK); j <= Math.floor((cy + H) / CHUNK); j++) {
@@ -1635,14 +1622,15 @@ function draw() {
     } else {
       ctx.globalAlpha = Math.min(.55, z.life / z.max);
       ctx.fillStyle = z.slow ? C['--shot2'] : C['--shot3'];
-      poly(z.x, z.y, z.r * (.85 + .15 * Math.sin(t * 14 + z.x)), 0);
+      const zSides = z.sides || 0;
+      const zRot = z.spin ? t * z.spin : 0;
+      poly(z.x, z.y, z.r * (.85 + .15 * Math.sin(t * 14 + z.x)), zSides, zRot);
     }
   }
   ctx.globalAlpha = 1;
   ctx.fillStyle = C['--gem']; for (const g of gems) poly(g.x, g.y, 4, 4, Math.PI / 4);
   for (const e of enemies) {
     if (e.ally) {
-      // Flash when charm is about to expire (< 2 seconds left)
       const warningFlash = e.charmTimer < 2 && Math.floor(t * 12) % 2 === 0;
       ctx.fillStyle = warningFlash ? C['--flash'] : C['--player'];
     } else {
@@ -1681,7 +1669,6 @@ function draw() {
     poly(pl.x, pl.y, 65 + 15 * pl.ws.aura.lv, 0);
   }
   
-  // Render Windmill Katana Blades
   if (pl.ws.windmill) {
     const wm = pl.ws.windmill;
     const n = 3, R = 55 + 7.5 * wm.lv, bw = 12 + 2 * wm.lv;
@@ -1706,14 +1693,12 @@ function draw() {
     }
   }
 
-  // Render Mace (Spiked Ball & Chain)
   if (pl.ws.mace) {
     const wb = pl.ws.mace;
     const r = 120 + 20 * wb.lv;
     const ballR = 16 + 3 * wb.lv;
     const mx = pl.x + Math.cos(wb.a) * r, my = pl.y + Math.sin(wb.a) * r;
     
-    // Draw Chain Links
     ctx.strokeStyle = C['--fg'];
     ctx.lineWidth = 3;
     ctx.setLineDash([6, 4]);
@@ -1723,7 +1708,6 @@ function draw() {
     ctx.stroke();
     ctx.setLineDash([]);
     
-    // Draw Spiked Ball
     ctx.fillStyle = C['--shot3'];
     ctx.strokeStyle = C['--fg'];
     ctx.lineWidth = 2;
@@ -1733,7 +1717,6 @@ function draw() {
   }
   ctx.globalAlpha = 1;
   
-  // Draw Enemy Projectiles in exact 170 deg hue (C['--eshot'])
   ctx.fillStyle = C['--eshot']; for (const s of eshots) poly(s.x, s.y, s.r, 0);
   for (const p of parts) { ctx.globalAlpha = Math.max(0, p.life * 2.5); ctx.fillStyle = C[p.col]; poly(p.x, p.y, 2.5, 0); }
   ctx.globalAlpha = pl.iv > 0 && ((t * 20) | 0) % 2 ? .4 : 1;
@@ -1741,7 +1724,6 @@ function draw() {
   ctx.globalAlpha = 1;
   ctx.restore();
 
-  // Final Boss Off-Screen Edge Indicator Bubble
   const finalBossObj = enemies.find(e => e.type && e.type.final && !e.dead);
   if (finalBossObj) {
     const screenLeft = pl.x - W / 2, screenRight = pl.x + W / 2;
@@ -1762,7 +1744,6 @@ function draw() {
       ctx.fill();
       ctx.stroke();
       
-      // Star Icon inside bubble
       ctx.fillStyle = '#ffffff';
       polyPath(edgeX, edgeY, 10 * pulse, 'star', t * 2);
       ctx.fill();
@@ -1770,18 +1751,15 @@ function draw() {
     }
   }
 
-  // Top HUD Bar
   ctx.fillStyle = C['--obstacle']; ctx.fillRect(0, 0, W, 8);
   ctx.fillStyle = C['--gem']; ctx.fillRect(0, 0, W * (finalDead ? 1 : Math.min(1, pl.xp / need())), 8);
   
-  // HUD Text Stack (Top Left)
   ctx.fillStyle = C['--fg']; ctx.font = '600 14px system-ui,sans-serif'; ctx.textBaseline = 'top';
   ctx.textAlign = 'left'; 
   ctx.fillText('LV ' + pl.level + '   HP ' + Math.ceil(Math.max(0, pl.hp)) + '/' + P.maxHp, 12, 16);
   ctx.fillText('TIME  ' + fmt(t) + (split !== null ? '  (split ' + fmt(split) + ')' : ''), 12, 36);
   ctx.fillText((finalDead ? 'SCORE ' + Math.round(score) + '   ' : '') + kills + ' KILLS', 12, 56);
 
-  // Pause Menu Button (Top Right)
   ctx.textAlign = 'right';
   ctx.font = '700 13px system-ui,sans-serif';
   ctx.fillStyle = C['--fg'];
@@ -1811,7 +1789,6 @@ const pos = e => { const r = cv.getBoundingClientRect(); return [e.clientX - r.l
 
 cv.addEventListener('pointerdown', e => {
   const [x, y] = pos(e);
-  // Check Menu button click in top-right
   if (x >= W - 90 && y <= 45) {
     togglePause();
     return;
